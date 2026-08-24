@@ -1,8 +1,16 @@
 import { Router } from "express";
-import { createLog } from "../controllers/log.controller";
+import {
+    createLog,
+    getAllLogs,
+    getLogsByService,
+    getLogById,
+} from "../controllers/log.controller";
 
-const logRouter = Router();
+const router = Router();
 
-logRouter.post("/create", createLog);
+router.post("/", createLog);
+router.get("/", getAllLogs);
+router.get("/service/:serviceId", getLogsByService);
+router.get("/:logId", getLogById);
 
-export default logRouter;
+export default router;

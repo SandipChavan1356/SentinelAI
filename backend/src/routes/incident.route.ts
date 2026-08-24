@@ -6,14 +6,11 @@ import {
     updateIncidentStatus,
 } from "../controllers/incident.controller";
 
-const incidentRouter = Router();
+const router = Router();
 
-incidentRouter.post("/create", createIncident);
+router.post("/", createIncident);
+router.get("/", getAllIncidents);
+router.get("/:incidentId", getIncidentById);
+router.patch("/:incidentId/status", updateIncidentStatus);
 
-incidentRouter.get("/", getAllIncidents);
-
-incidentRouter.get("/:incidentId", getIncidentById);
-
-incidentRouter.patch("/:incidentId/status", updateIncidentStatus);
-
-export default incidentRouter;
+export default router;

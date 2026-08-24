@@ -3,30 +3,34 @@ import { Log } from "../models/log.model";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/Asynchandler";
+import { detectIncident } from "../services/incident.service";
 
 const createLog = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { service, level, message } = req.body;
-        console.log("BODY:", req.body);
-
-        console.log("BODY:", req.body);
-        console.log("SERVICE:", service);
-        console.log("LEVEL:", level);
-        console.log("MESSAGE:", message);
+       
 
         if (!service || !level || !message) {
             throw new ApiError(400, "Service, level and message are required");
         }
 
         const log = await Log.create({
-            service,
-            level,
-            message,
-        });
+    service,
+    level,
+    message,
+});
 
-        return res
-            .status(201)
-            .json(new ApiResponse(201, log, "Log created successfully"));
+await detectIncident(service, level, message);
+
+return res
+    .status(201)
+    .json(
+        new ApiResponse(
+            201,
+            log,
+            "Log created successfully"
+        )
+    );
 
     // } catch (error) {
     //     throw new ApiError(500, "Failed to create log");

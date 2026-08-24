@@ -5,10 +5,10 @@ import {
     getServiceById,
 } from "../controllers/service.controller";
 
-const serviceRouter = Router();
+const router = Router();
 
-serviceRouter.post("/create", createService);
-serviceRouter.get("/", getAllServices);
-serviceRouter.get("/:serviceId", getServiceById);
+router.post("/", createService);
+router.get("/", getAllServices);
+router.get("/:serviceId", getServiceById);
 
-export default serviceRouter;
+export default router;
