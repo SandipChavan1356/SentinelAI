@@ -31,12 +31,8 @@ return res
             "Log created successfully"
         )
     );
-
-    // } catch (error) {
-    //     throw new ApiError(500, "Failed to create log");
-    // }
-    }catch (error) {
-    throw error;
+    } catch (error) {
+        throw new ApiError(500, "Failed to create log");
     }
 });
 

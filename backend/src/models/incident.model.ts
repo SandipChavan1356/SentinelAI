@@ -39,6 +39,10 @@ const IncidentSchema = new Schema(
             min: 0,
             max: 100,
         },
+        
+        suggestedFix: {
+        type: String,
+        },
 
         startedAt: {
             type: Date,
