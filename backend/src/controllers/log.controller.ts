@@ -15,10 +15,10 @@ const createLog = asyncHandler(async (req: Request, res: Response) => {
         }
 
         const log = await Log.create({
-    service,
-    level,
-    message,
-});
+            service,
+            level,
+            message,
+        });
 
 await detectIncident(service, level, message);
 
