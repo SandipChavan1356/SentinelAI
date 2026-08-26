@@ -5,6 +5,8 @@ import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/Asynchandler";
 import { Log } from "../models/log.model";
 import { analyzeIncident } from "../services/ai.service";
+import { generateEmbedding } from "../services/embedding.service";
+import { searchSimilarLogs } from "../services/vector.service";
 
 
 const createIncident = asyncHandler(async (req: Request, res: Response) => {
@@ -184,11 +186,42 @@ const analyzeIncidentWithAI = asyncHandler(
     }
 );
 
+const testVectorSearch = asyncHandler(
+    async (req: Request, res: Response) => {
+
+        const { text } = req.body;
+
+        if (!text) {
+            throw new ApiError(400, "Text is required");
+        }
+
+        const embedding = await generateEmbedding(text);
+
+        if (!embedding) {
+            throw new ApiError(500, "Embedding generation failed");
+        }
+
+        const results = await searchSimilarLogs(embedding, 5);
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    query: text,
+                    results,
+                },
+                "Similar logs found successfully"
+            )
+        );
+    }
+);
+
 
 export {
     createIncident,
     getAllIncidents,
     getIncidentById,
     updateIncidentStatus,
-    analyzeIncidentWithAI
+    analyzeIncidentWithAI,
+    testVectorSearch
 };

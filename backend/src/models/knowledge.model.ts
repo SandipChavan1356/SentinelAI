@@ -1,25 +1,30 @@
 import mongoose, { Schema } from "mongoose";
 
-const LogSchema = new Schema(
+const KnowledgeSchema = new Schema(
     {
-        service: {
-            type: Schema.Types.ObjectId,
-            ref: "Service",
-            required: true,
-        },
-
-        level: {
+        title: {
             type: String,
             required: true,
         },
 
-        message: {
+        content: {
             type: String,
             required: true,
         },
+
+        solution: {
+            type: String,
+            required: true,
+        },
+
+        source: {
+            type: String,
+            enum: ["manual", "incident"],
+            default: "manual",
+        },
+
         embedding: {
             type: [Number],
-            default: undefined,
         },
     },
     {
@@ -27,4 +32,7 @@ const LogSchema = new Schema(
     }
 );
 
-export const Log = mongoose.model("Log", LogSchema);
+export const Knowledge = mongoose.model(
+    "Knowledge",
+    KnowledgeSchema
+);

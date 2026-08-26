@@ -4,11 +4,12 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/Asynchandler";
 import { detectIncident } from "../services/incident.service";
+import { generateEmbedding } from "../services/embedding.service";
 
 const createLog = asyncHandler(async (req: Request, res: Response) => {
     try {
         const { service, level, message } = req.body;
-       
+        const embedding = await generateEmbedding(message);
 
         if (!service || !level || !message) {
             throw new ApiError(400, "Service, level and message are required");
@@ -18,6 +19,7 @@ const createLog = asyncHandler(async (req: Request, res: Response) => {
             service,
             level,
             message,
+            embedding,
         });
 
 await detectIncident(service, level, message);
