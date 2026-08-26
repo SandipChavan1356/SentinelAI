@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import { generateEmbedding } from "./embedding.service";
+import { searchSimilarLogs } from "./vector.service";
 
 const analyzeIncident = async (
     title: string,
@@ -12,6 +14,30 @@ const analyzeIncident = async (
         throw new Error("GEMINI_API_KEY is missing");
     }
 
+    const incidentText = `${title}. ${description}`;
+
+    const embedding = await generateEmbedding(incidentText);
+
+    if (!embedding) {
+        throw new Error("Failed to generate incident embedding");
+    }
+
+    const similarLogs = await searchSimilarLogs(embedding, 5);
+
+    console.log("🔎 SIMILAR LOGS:", similarLogs);
+
+    const similarLogsContext = similarLogs
+        .map((log, index) => {
+            return `
+Log ${index + 1}:
+Level: ${log.level}
+Message: ${log.message}
+Similarity Score: ${log.score}
+Created At: ${log.createdAt}
+`;
+        })
+        .join("\n");
+
     const ai = new GoogleGenAI({
         apiKey,
     });
@@ -19,7 +45,7 @@ const analyzeIncident = async (
     const prompt = `
 You are an AI DevOps incident analyst.
 
-Analyze this production incident.
+Analyze this production incident using the provided historical logs.
 
 Incident Title:
 ${title}
@@ -30,7 +56,15 @@ ${description}
 Recent Logs:
 ${logs}
 
-Determine the most probable root cause and suggest a practical fix.
+Similar Historical Logs Retrieved From Database:
+${similarLogsContext}
+
+Use the historical logs as additional evidence when determining the probable root cause.
+
+Determine:
+1. The most probable root cause.
+2. A practical suggested fix.
+3. Your confidence level.
 
 Return ONLY valid JSON.
 Do not use markdown.
