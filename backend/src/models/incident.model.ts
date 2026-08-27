@@ -2,14 +2,8 @@ import mongoose , {Schema} from "mongoose";
 
 const IncidentSchema = new Schema(
     {
-        title: {
-            type: String,
-            required: true,
-        },
-
-        description: {
-            type: String,
-        },
+        title: String,
+        description: String,
 
         severity: {
             type: String,
@@ -30,31 +24,25 @@ const IncidentSchema = new Schema(
             },
         ],
 
-        rootCause: {
-            type: String,
-        },
+        rootCause: String,
 
         confidence: {
             type: Number,
             min: 0,
             max: 100,
         },
-        
-        suggestedFix: {
-        type: String,
+
+        aiAnalysis: {
+            summary: String,
+            rootCause: String,
+            suggestedFix: String,
+            reasoning: String,
         },
 
-        startedAt: {
-            type: Date,
-        },
-
-        resolvedAt: {
-            type: Date,
-        },
+        startedAt: Date,
+        resolvedAt: Date,
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 export const Incident = mongoose.model("Incident" , IncidentSchema);

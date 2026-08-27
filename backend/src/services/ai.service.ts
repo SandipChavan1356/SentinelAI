@@ -1,87 +1,84 @@
 import { GoogleGenAI } from "@google/genai";
 import { generateEmbedding } from "./embedding.service";
-import { searchSimilarLogs } from "./vector.service";
+import {
+    searchSimilarLogs,
+    searchSimilarKnowledge,
+} from "./vector.service";
+
+const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY!,
+});
+
 
 const analyzeIncident = async (
     title: string,
     description: string,
     logs: string
 ) => {
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-        throw new Error("GEMINI_API_KEY is missing");
-    }
-
-    const incidentText = `${title}. ${description}`;
-
-    const embedding = await generateEmbedding(incidentText);
+    const embedding = await generateEmbedding(
+        `${title}\n${description}`
+    );
 
     if (!embedding) {
-        throw new Error("Failed to generate incident embedding");
+        throw new Error("Failed to generate embedding");
     }
 
-    const similarLogs = await searchSimilarLogs(embedding, 5);
+    const similarLogs = await searchSimilarLogs(
+        embedding,
+        5
+    );
 
-    console.log("🔎 SIMILAR LOGS:", similarLogs);
-
-    const similarLogsContext = similarLogs
-        .map((log, index) => {
-            return `
-Log ${index + 1}:
-Level: ${log.level}
-Message: ${log.message}
-Similarity Score: ${log.score}
-Created At: ${log.createdAt}
-`;
-        })
-        .join("\n");
-
-    const ai = new GoogleGenAI({
-        apiKey,
-    });
+    const similarKnowledge = await searchSimilarKnowledge(
+        embedding,
+        5
+    );
 
     const prompt = `
-You are an AI DevOps incident analyst.
+You are a DevOps Incident Intelligence AI.
 
-Analyze this production incident using the provided historical logs.
+Analyze the following incident using the current logs,
+similar historical logs, and relevant knowledge.
 
-Incident Title:
+INCIDENT
+Title:
 ${title}
 
-Incident Description:
+Description:
 ${description}
 
-Recent Logs:
-${logs}
+CURRENT LOGS:
+${logs || "No logs available"}
 
-Similar Historical Logs Retrieved From Database:
-${similarLogsContext}
+SIMILAR HISTORICAL LOGS:
+${JSON.stringify(similarLogs)}
 
-Use the historical logs as additional evidence when determining the probable root cause.
+RELEVANT KNOWLEDGE:
+${JSON.stringify(similarKnowledge)}
 
-Determine:
-1. The most probable root cause.
-2. A practical suggested fix.
-3. Your confidence level.
+Your task is to determine:
 
-Return ONLY valid JSON.
-Do not use markdown.
-Do not add explanations outside the JSON.
+1. What is the probable root cause?
+2. What should the developer/DevOps engineer do to fix it?
+3. Why did you reach this conclusion?
+4. How confident are you?
+5. How severe is the incident?
 
-Required format:
+Return ONLY valid JSON in exactly this format:
 
 {
-  "rootCause": "string",
+  "summary": "Short summary of the incident",
+  "rootCause": "Probable root cause",
+  "suggestedFix": "Recommended fix",
+  "reasoning": "Reasoning based on logs and retrieved knowledge",
   "confidence": 0,
-  "suggestedFix": "string"
+  "severity": "low"
 }
 
 Rules:
-- confidence must be between 0 and 100.
-- rootCause should explain the probable technical reason.
-- suggestedFix should provide practical troubleshooting or remediation steps.
+- severity must be exactly one of: low, medium, high, critical
+- confidence must be a number between 0 and 100
+- Do not return markdown
+- Do not return explanations outside JSON
 `;
 
     const response = await ai.models.generateContent({
@@ -89,27 +86,49 @@ Rules:
         contents: prompt,
     });
 
-    const text = response.text;
+    let text = response.text?.trim();
 
     if (!text) {
         throw new Error("AI returned an empty response");
     }
 
-    const cleanedText = text
-        .replace(/^```json\s*/, "")
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "")
+    text = text
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
         .trim();
+
 
     let result;
 
     try {
-        result = JSON.parse(cleanedText);
+        result = JSON.parse(text);
     } catch (error) {
+        console.error("❌ Invalid AI JSON:", text);
         throw new Error("AI returned invalid JSON");
     }
 
-    return result;
+    if (
+        typeof result.summary !== "string" ||
+        typeof result.rootCause !== "string" ||
+        typeof result.suggestedFix !== "string" ||
+        typeof result.reasoning !== "string" ||
+        typeof result.confidence !== "number" ||
+        !["low", "medium", "high", "critical"].includes(
+            result.severity
+        )
+    ) {
+        throw new Error("AI returned invalid incident analysis");
+    }
+
+    return {
+        summary: result.summary,
+        rootCause: result.rootCause,
+        suggestedFix: result.suggestedFix,
+        reasoning: result.reasoning,
+        confidence: result.confidence,
+        severity: result.severity,
+    };
 };
 
-export { analyzeIncident };
+export default analyzeIncident;

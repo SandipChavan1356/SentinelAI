@@ -1,7 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
-
+import "dotenv/config";
 import connectdb from "./config/db";
 import { app } from "./app";
 
