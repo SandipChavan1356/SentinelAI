@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(237,231,216,0.035) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  ::selection {
+    background: #D9A441;
+    color: #16140F;
+  }
+  :focus-visible {
+    outline: 2px solid #D9A441;
+    outline-offset: 2px;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #16140F;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #332E24;
+    border-radius: 4px;
+    border: 2px solid #16140F;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3A3327;
+  }
+}
+
+@layer components {
+  .stencil {
+    font-family: "Big Shoulders Display", sans-serif;
+    letter-spacing: 0.01em;
+  }
+  .eyebrow {
+    font-family: "Big Shoulders", sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
